@@ -79,18 +79,28 @@ def init_canvas_2(canvas2): # Initializes canvas_2 and draws a sawtooth pattern,
     width = 400
     height = 400
     step = 40  # Spacing between points (length of a vector)
-
+    demi_step = 20
     # Draws diagonals from top-left to bottom-right
-    for y in range(0, height, step):
-        for x in range(0, width, step):
-            canvas2.create_line(x, y, x + step, y + step, fill="black")
-            activation_vectors.append(((x, y), (x + step, y + step)))
+    for y in range(0, height - step + 1, step):
+        for x in range(0, width - step + 1, step):
+            canvas2.create_line(x, y, x + step/2, y + step/2, fill="black")
+            activation_vectors.append(((x, y), (x + step/2, y + step/2)))
+    for y in range(demi_step, height - demi_step + 1, step):
+        for x in range(demi_step, width - demi_step + 1, step):
+            canvas2.create_line(x, y, x + step/2, y + step/2, fill="black")
+            activation_vectors.append(((x, y), (x + step/2, y + step/2))) 
+    
 
     # Draws diagonals from bottom-left to top-right
-    for y in range(0, height, step):
-        for x in range(0, width, step):
-            canvas2.create_line(x, y + step, x + step, y, fill="black")
-            activation_vectors.append(((x, y + step), (x + step, y)))
+    for y in range(demi_step, height - demi_step + 1, step):
+        for x in range(demi_step, width - demi_step + 1, step):
+            canvas2.create_line(x, y, x + step/2, y - step/2, fill="black")
+            activation_vectors.append(((x, y), (x + step/2, y - step/2)))
+    for y in range(step, height + 1, step):
+        for x in range(0, width - step + 1, step):
+            canvas2.create_line(x, y, x + step/2, y - step/2, fill="black")
+            activation_vectors.append(((x, y), (x + step/2, y - step/2)))
+         
     
     # Initializes activation states
     activation_states.extend([0] * len(activation_vectors))
@@ -129,11 +139,18 @@ canvas1.bind("<ButtonRelease-1>", lambda e: stop_drawing(canvas1, e))
 button_frame = tk.Frame(root)
 button_frame.pack(pady=10)
 
+input_text = tk.Label(button_frame, text="Enter your sample label :")
+input_text.pack(side=tk.LEFT, padx=5)
+label_input = tk.Entry(button_frame)
+label_input.pack(side=tk.LEFT, padx=5)
+
 clear_button = tk.Button(button_frame, text="Clear", command=clear_canvas)
 clear_button.pack(side=tk.LEFT, padx=5)
 
 save_button = tk.Button(button_frame, text="Save", command=save_vectors)
 save_button.pack(side=tk.LEFT, padx=5)
+
+
 
 # Initialize global variables
 last_position = None
