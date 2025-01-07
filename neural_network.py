@@ -142,9 +142,19 @@ class NeuralNetwork:
 
     def test(self, input_set, output_set):
         for i, sample in enumerate(input_set):
+            # Effectuer une passe avant pour obtenir les activations des neurones de sortie
             self.forward_pass(sample)
-            prediction = [round(neuron.activated_value, 2) for neuron in self.total_layers[-1]]
-            print(f"Predicted: {prediction} | Reference: {output_set[i]}")
-
+            # Récupérer les valeurs activées des neurones de la couche de sortie
+            prediction = [neuron.activated_value for neuron in self.total_layers[-1]]
+            # Identifier l'indice du neurone avec la valeur la plus élevée (classe prédite)
+            predicted_class = np.argmax(prediction)
+            # Identifier l'indice de la classe réelle
+            reference_class = np.argmax(output_set[i])
+            
+            # Afficher les résultats avec plus de clarté
+            print(f"Sample {i + 1}:")
+            print(f"  Predicted class: {predicted_class} (values: {prediction})")
+            print(f"  Reference class: {reference_class} (output: {output_set[i]})")
+            print()
 
 

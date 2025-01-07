@@ -74,7 +74,7 @@ def save_vectors(): # Saves the drawn vectors in two files.
         sample_name = "default"  # Use "default" if no label is provided
 
     # Save activation states to a file named after the sample label
-    activation_file = f"{sample_name}.txt"
+    activation_file = f"samples/{sample_name}.txt"
     with open(activation_file, "w") as f:
         f.write(",".join(map(str, activation_states)))
 
