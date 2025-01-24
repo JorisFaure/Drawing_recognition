@@ -107,6 +107,16 @@ def init_canvas_2(canvas2): # Initializes canvas_2 and draws a sawtooth pattern,
         for x in range(0, width - step + 1, step):
             canvas2.create_line(x, y, x + step/2, y - step/2, fill="black")
             activation_vectors.append(((x, y), (x + step/2, y - step/2)))
+    
+    # Draws diagonals from bottom-left to top-right
+    for y in range(0, height, demi_step):
+        for x in range(demi_step, width, demi_step):
+            canvas2.create_line(x, y, x, y + step/2, fill="black")
+            activation_vectors.append(((x, y), (x, y + step/2)))
+    for y in range(demi_step, height - demi_step + 1, demi_step):
+        for x in range(0, width, demi_step):
+            canvas2.create_line(x, y, x + step/2, y, fill="black")
+            activation_vectors.append(((x, y), (x + step/2, y)))
          
     
     # Initializes activation states

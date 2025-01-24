@@ -36,13 +36,13 @@ samples_dir = "samples"
 input_set, output_set = load_samples_and_outputs(samples_dir)
 
 # Check the shapes of input and output sets
-print(f"Input set shape: {input_set.shape}")
+print(f"Input set shape: {input_set.shape} \n {input_set}")
 print(f"Output set shape: {output_set.shape}")
 
 # Create the neural network
-# nn = NeuralNetwork(layer_sizes=[input_set.shape[1], 100, output_set.shape[1]], learning_rate=0.2, activation_function='sigmoid')
-
 nn = NeuralNetwork(layer_sizes=[input_set.shape[1], 100, output_set.shape[1]], learning_rate=0.2, activation_function='sigmoid')
+
+
 
 # Measure the training time
 print("Starting training...")
@@ -60,5 +60,6 @@ nn.test(input_set, output_set)
 
 """
 Pour la suite :
-    - Tester si le réseau marche lorsque il y a un output avec + de 1 valeurs. Donc tester avec des petit truc custom (un peu en mode Xor)
+    - Ca marche !
+    - Il faut maintenant faire en sorte d'avoir plusieurs sample qui ont le même nom et sont lié à un seul output.
 """

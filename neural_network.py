@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 
 class Neuron:
     def __init__(self, input_size):
-        self.weights = np.random.uniform(0.0, 1.0, size=(input_size,))
-        self.bias = 0.1
+        self.weights = np.random.randn(input_size) * np.sqrt(1 / input_size) #Xavier initialisation
+        self.bias = 0
         self.value = 0
         self.activated_value = 0
         
@@ -62,6 +62,7 @@ class NeuralNetwork:
                 i += 1
 
     def backpropagation(self, output_vec, input_vec):
+        
         layer_outputs = [input_vec]
         for layer in self.total_layers: # we store all the a(L=n) values
             layer_outputs.append([neuron.activated_value for neuron in layer])
@@ -132,6 +133,7 @@ class NeuralNetwork:
                 print(f"Epoch {epoch}, MSE: {errors[-1]}")
                 
         #create the error plot
+        plt.clf()
         plt.plot(range(epochs), errors, label='Total error')
         plt.xlabel('Epoch')
         plt.ylabel('Mean error')
