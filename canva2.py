@@ -4,6 +4,9 @@ import time
 import threading
 from nn_config import init_and_train_nn, test_nn
 import numpy as np
+import os
+import shutil
+
 
 
 def start_drawing(canvas, event):
@@ -41,7 +44,7 @@ def draw_motion(canvas, event): # draws a vector between two positions following
  
             # Display the highest confidence prediction
             max_confidence_idx = np.argmax(prediction)
-            highest_prediction_label = tk.Label(prediction_frame, text=f"I think it's: {file_names[max_confidence_idx]}", font=(14, "bold"))
+            highest_prediction_label = tk.Label(prediction_frame, text=f"I think it's: {file_names[max_confidence_idx]}", font=("Arial", 14, "bold"))
             highest_prediction_label.pack(anchor="w")
             
             
@@ -86,6 +89,8 @@ def clear_canvas(): # Clears canvas1 and resets canvas2.
     init_canvas_2(canvas2)
 
 def save_vectors(): # Saves the drawn vectors in two files.
+    if not os.path.exists("samples"):
+        os.makedirs("samples")
     with open("canvas1_vectors.txt", "w") as f1:
         for vector in drawing_vectors:
             f1.write(f"{vector[0]},{vector[1]}\n")
@@ -169,6 +174,11 @@ def training():
     
     threading.Thread(target=thread_training).start()
 
+def on_close():
+    # delete 'samples' folder
+    if os.path.exists("samples"):
+        shutil.rmtree("samples")
+    root.destroy()
 
 # Create the main window
 root = tk.Tk()
@@ -241,5 +251,6 @@ is_trained = 0 # Know if training is finish, to starting inference
 nn = None
 file_names = None
 
+root.protocol("WM_DELETE_WINDOW", on_close)
 # Start the main loop
 tk.mainloop()
