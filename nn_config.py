@@ -8,55 +8,55 @@ def load_samples_and_outputs(samples_dir):
     """Load activation states from files and generate input-output sets."""
     input_set = []
     output_set = []
+    file_names = []
     
     # Get all files in the directory
     sample_files = sorted(os.listdir(samples_dir))  # Sorted for consistent ordering
-    
-    # Number of samples determines the number of output neurons
-    num_samples = len(sample_files)
-    
+    num_classes = len(sample_files) # Number of classes = number of files (each file represents a class)
     # Create a one-hot encoding matrix for outputs
-    output_matrix = np.eye(num_samples)
+    output_matrix = np.eye(num_classes)
     
     for idx, filename in enumerate(sample_files):
         file_path = os.path.join(samples_dir, filename)
-        
-        # Read activation states from the file
+        file_name_without_extension = os.path.splitext(filename)[0] # it's for retrieving the name for canva2.py
+        file_names.append(file_name_without_extension)
         with open(file_path, "r") as file:
-            activation_states = file.read().strip().split(",")
-            input_set.append([int(x) for x in activation_states])
-        
-        # Add the corresponding output vector (one-hot encoded)
-        output_set.append(output_matrix[idx])
+            for line in file:
+                activation_states = line.strip().split(",")
+                input_set.append([int(x) for x in activation_states])
+                # Assign the corresponding one-hot encoded output for the entire file
+                output_set.append(output_matrix[idx])
+    return np.array(input_set), np.array(output_set), file_names
+
+
+
+def init_and_train_nn(epochs, lr, activation_function, hidden_size, progress_callback=None) :
+    input_set, output_set, file_names = load_samples_and_outputs("samples") # We load the input and output
+    # Print sample results for debugging
+    print("Input samples shape:", input_set.shape)
+    print("Output samples shape:", output_set.shape)
+    print("First input sample:", input_set[0])
+    print("First output sample:", output_set[0])
     
-    return np.array(input_set), np.array(output_set)
+    nn = NeuralNetwork(layer_sizes=[input_set.shape[1], hidden_size, output_set.shape[1]], learning_rate=lr, activation_function=activation_function) # Create the neural network
+    print("Starting training...")
+    start_time = time.time()
+    end_time = time.time()
+    print("Training over")
 
-# Load the samples and outputs
-samples_dir = "samples"
-input_set, output_set = load_samples_and_outputs(samples_dir)
+    training_time = end_time - start_time
+    nn.train(input_set, output_set, epochs, batch_size=1, progress_callback=progress_callback)
+    print(f"Training time: {training_time:.2f} seconds.")
 
-# Check the shapes of input and output sets
-print(f"Input set shape: {input_set.shape} \n {input_set}")
-print(f"Output set shape: {output_set.shape}")
+    # Test the network
+    print("\nTest result:")
+    nn.test(input_set, output_set)
+    
+    return nn, file_names
+    
+def test_nn(nn, input_set) :
+    return nn.inference(input_set)
 
-# Create the neural network
-nn = NeuralNetwork(layer_sizes=[input_set.shape[1], 100, output_set.shape[1]], learning_rate=0.2, activation_function='sigmoid')
-
-
-
-# Measure the training time
-print("Starting training...")
-start_time = time.time()
-end_time = time.time()
-print("Training over")
-
-training_time = end_time - start_time
-nn.train(input_set, output_set, epochs=4000, batch_size=1)
-print(f"Training time: {training_time:.2f} seconds.")
-
-# Test the network
-print("\nTest result:")
-nn.test(input_set, output_set)
 
 """
 Pour la suite :

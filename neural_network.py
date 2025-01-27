@@ -97,9 +97,11 @@ class NeuralNetwork:
 
         return (weight_gradients, bias_gradients)
 
-    def train(self, input_data, output_data, epochs, batch_size):
+    def train(self, input_data, output_data, epochs, batch_size, progress_callback=None):
         errors = []
         for epoch in range(epochs):
+            if progress_callback: # for the progress bar
+                progress_callback(epoch)
             # shuffle the data while keeping pairs of input/output
             permutation = np.random.permutation(len(input_data))
             input_data = input_data[permutation]
@@ -144,19 +146,20 @@ class NeuralNetwork:
 
     def test(self, input_set, output_set):
         for i, sample in enumerate(input_set):
-            # Effectuer une passe avant pour obtenir les activations des neurones de sortie
             self.forward_pass(sample)
-            # Récupérer les valeurs activées des neurones de la couche de sortie
-            prediction = [neuron.activated_value for neuron in self.total_layers[-1]]
-            # Identifier l'indice du neurone avec la valeur la plus élevée (classe prédite)
+            prediction = [neuron.activated_value for neuron in self.total_layers[-1]] # retrieve the values on the output layer
             predicted_class = np.argmax(prediction)
-            # Identifier l'indice de la classe réelle
             reference_class = np.argmax(output_set[i])
             
-            # Afficher les résultats avec plus de clarté
             print(f"Sample {i + 1}:")
             print(f"  Predicted class: {predicted_class} (values: {prediction})")
             print(f"  Reference class: {reference_class} (output: {output_set[i]})")
             print()
-
-
+    
+    def inference(self, sample) :
+        self.forward_pass(sample)
+        prediction = [neuron.activated_value for neuron in self.total_layers[-1]] # retrieve the values on the output layer
+        predicted_class = np.argmax(prediction)
+        print(f"  Predicted class: {predicted_class} (values: {prediction})")
+        return prediction, predicted_class
+        

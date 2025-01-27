@@ -1,19 +1,24 @@
 import tkinter as tk
+from tkinter import ttk
 import time
+import threading
+from nn_config import init_and_train_nn, test_nn
+import numpy as np
 
-def start_drawing(canvas, event): # Initialises the drawing process on the canvas.
-    global last_position, last_time
+
+def start_drawing(canvas, event):
+    global last_position, last_time # we use it to specify that we use the variable declared at the beginning and not a new variable
     last_position = (event.x, event.y)
     last_time = time.time()
     canvas.bind("<Motion>", lambda e: draw_motion(canvas, e))
 
-def stop_drawing(canvas, event): # Stops the drawing process on the canvas.
+def stop_drawing(canvas, event):
     canvas.unbind("<Motion>")
 
-def draw_motion(canvas, event): # Draws a vector between two positions following the mouse movement.
-    global last_position, last_time, activation_states
+def draw_motion(canvas, event): # draws a vector between two positions following the mouse movement.
+    global last_position, last_time, activation_states, prediction_frame
     current_time = time.time()
-    if current_time - last_time >= 0.05:  # Draw every 50ms
+    if current_time - last_time >= 0.05:  # draw every 50ms
         x1, y1 = last_position
         x2, y2 = event.x, event.y
         canvas.create_line(x1, y1, x2, y2, fill="black", width=1)
@@ -21,18 +26,37 @@ def draw_motion(canvas, event): # Draws a vector between two positions following
         check_intersection(x1, y1, x2, y2)
         last_position = (x2, y2)
         last_time = current_time
+        print(is_trained)
+        if is_trained == 1 : # inference
+            prediction, predicted_class = test_nn(nn, activation_states)
+            # Clear previous prediction results (if any)
+            for widget in prediction_frame.winfo_children():
+                widget.destroy()
+ 
+            # Display the prediction results
+            for idx, file_name in enumerate(file_names):
+                confidence = prediction[idx] * 100
+                file_label = tk.Label(prediction_frame, text=f"{file_name}: {confidence:.1f}%")
+                file_label.pack(anchor="w")
+ 
+            # Display the highest confidence prediction
+            max_confidence_idx = np.argmax(prediction)
+            highest_prediction_label = tk.Label(prediction_frame, text=f"I think it's: {file_names[max_confidence_idx]}", font=(14, "bold"))
+            highest_prediction_label.pack(anchor="w")
+            
+            
+    
 
 def check_intersection(x1, y1, x2, y2): # Checks if the drawn vector intersects an activation vector and updates it if so.
     global activation_states
     for i, ((ax1, ay1), (ax2, ay2)) in enumerate(activation_vectors):
         if activation_states[i] == 0 and is_intersecting((x1, y1), (x2, y2), (ax1, ay1), (ax2, ay2)):
-            activation_states[i] = 1  # Activates the vector
-            # Redraws the vector in red
+            activation_states[i] = 1  # Activates the vector and redraw it in red
             canvas2.create_line(ax1, ay1, ax2, ay2, fill="red", width=2)
 
 def is_intersecting(p1, p2, q1, q2): # Determines if two segments (p1-p2 and q1-q2) intersect.
     def orientation(a, b, c):
-        # Calculates the orientation
+        # calculates the orientation
         return (b[1] - a[1]) * (c[0] - b[0]) - (b[0] - a[0]) * (c[1] - b[1])
     
     o1 = orientation(p1, p2, q1)
@@ -75,8 +99,10 @@ def save_vectors(): # Saves the drawn vectors in two files.
 
     # Save activation states to a file named after the sample label
     activation_file = f"samples/{sample_name}.txt"
-    with open(activation_file, "w") as f:
-        f.write(",".join(map(str, activation_states)))
+    with open(activation_file, "a") as f:
+        f.write(",".join(map(str, activation_states)) + "\n")
+    
+    clear_canvas()
 
 def init_canvas_2(canvas2): # Initializes canvas_2 and draws a sawtooth pattern, vector by vector.
     global activation_vectors, activation_states
@@ -125,6 +151,25 @@ def init_canvas_2(canvas2): # Initializes canvas_2 and draws a sawtooth pattern,
     print(f"Activation States: {activation_states}")  # Check the states
     return canvas2
 
+def training():
+    global is_trained, nn, progress_bar
+    epochs = 1000
+
+    # Update progress bar callback function
+    def update_progress_bar(epoch):
+        progress_bar["value"] = (epoch / epochs) * 100
+        progress_bar.update_idletasks()  # update graphic interface
+
+    # Run the training in a separate thread to keep the UI responsive
+    def thread_training():
+        global nn, is_trained, file_names
+        nn, file_names = init_and_train_nn(epochs=epochs, lr=0.2, activation_function='sigmoid', hidden_size=100, progress_callback=update_progress_bar)
+        is_trained = 1
+        print("Entraînement terminé.")
+    
+    threading.Thread(target=thread_training).start()
+
+
 # Create the main window
 root = tk.Tk()
 root.title("Drawing Canvas")
@@ -167,11 +212,34 @@ clear_button.pack(side=tk.LEFT, padx=5)
 save_button = tk.Button(button_frame, text="Save", command=save_vectors)
 save_button.pack(side=tk.LEFT, padx=5)
 
+train_button = tk.Button(button_frame, text="Train", command=training)
+train_button.pack(side=tk.LEFT, padx=5)
+
+progress_frame = tk.Frame(root)
+progress_frame.pack(pady=10)
+progress_bar = ttk.Progressbar(progress_frame, orient="horizontal", length=300, mode="determinate")
+progress_bar["maximum"] = 100
+progress_bar.pack(pady=10)
+
+# Create a frame for the prediction results to display under 'Prediction results:'
+prediction_results_frame = tk.Frame(root)
+prediction_results_frame.pack(pady=10)
+
+results_text = tk.Label(prediction_results_frame, text="Prediction results :")
+results_text.pack(side=tk.LEFT, padx=5)
+
+# Frame to contain the dynamic prediction results
+prediction_frame = tk.Frame(prediction_results_frame)
+prediction_frame.pack(pady=5)
+
 
 
 # Initialize global variables
 last_position = None
 last_time = None
+is_trained = 0 # Know if training is finish, to starting inference
+nn = None
+file_names = None
 
 # Start the main loop
 tk.mainloop()
