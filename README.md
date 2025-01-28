@@ -38,8 +38,8 @@ This project is an interactive application that allows users to draw sketches, s
 ---
 
 ### Customizable Parameters
-You can adjust the neural network parameters directly in the `training()` function of the `canva2.py` file:
-- At **line 203**, change the number of epochs:
+You can adjust the neural network parameters directly in the `training()` function of the `canva2.py` file at **line 203**:
+- At **line 205**, change the number of epochs:
   ```python
   epochs = 1000
   ```
