@@ -25,11 +25,6 @@ class Neuron:
                 return 1
             else :
                 return 0
-            
-            
-            
-    # def activate(self):
-    #     self.activated_value = self.sigmoid()
 
     def forward_pass(self, input_vec, activation_function):
         self.value = np.dot(self.weights, input_vec) + self.bias
@@ -37,6 +32,7 @@ class Neuron:
 
     def cost_derivative_by_layer(self, output_ref) : # (1/2) * 2(y - y_ref)
         return (self.activated_value - output_ref)
+
 
 class NeuralNetwork:
     def __init__(self, layer_sizes, learning_rate, activation_function):
@@ -130,7 +126,7 @@ class NeuralNetwork:
                 avg_bias_gradients = [bg / batch_size for bg in batch_bias_gradients]
                 self.update_weights_and_biases(avg_weight_gradients, avg_bias_gradients)
             errors.append(total_error / len(input_data))
-            if epoch % 1000 == 0:
+            if epoch % 100 == 0:
                 # show the MSE every x epoch
                 print(f"Epoch {epoch}, MSE: {errors[-1]}")
                 

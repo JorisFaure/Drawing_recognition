@@ -17,19 +17,62 @@ def start_drawing(canvas, event):
 
 def stop_drawing(canvas, event):
     canvas.unbind("<Motion>")
+    
+def normalize_drawing():
+    global drawing_vectors, norm_drawing_vectors, canvas1
+    
+    min_x = min([x[0] for vector in drawing_vectors for x in vector])
+    max_x = max([x[0] for vector in drawing_vectors for x in vector])
+    min_y = min([x[1] for vector in drawing_vectors for x in vector])
+    max_y = max([x[1] for vector in drawing_vectors for x in vector])
 
+    drawing_width = max_x - min_x
+    drawing_height = max_y - min_y
+    canvas_width = canvas1.winfo_width()
+    canvas_height = canvas1.winfo_height()
+
+    # Ratio calculus for keeping proportions
+    scale_x = canvas_width / drawing_width
+    scale_y = canvas_height / drawing_height
+    scale_factor = min(scale_x, scale_y)
+    # Centering
+    offset_x = (canvas_width - drawing_width * scale_factor) / 2 - min_x * scale_factor
+    offset_y = (canvas_height - drawing_height * scale_factor) / 2 - min_y * scale_factor
+
+    normalized_vectors = []
+    for (x1, y1), (x2, y2) in drawing_vectors:
+        normalized_vectors.append(
+            ((x1 * scale_factor + offset_x, y1 * scale_factor + offset_y), 
+             (x2 * scale_factor + offset_x, y2 * scale_factor + offset_y))
+        )
+
+    # We replace the old version of normalized vectors by the new one
+    norm_drawing_vectors = normalized_vectors
+    
 def draw_motion(canvas, event): # draws a vector between two positions following the mouse movement.
-    global last_position, last_time, activation_states, prediction_frame
+    global last_position, last_time, activation_states, prediction_frame, norm_drawing_vectors, canvas2
     current_time = time.time()
     if current_time - last_time >= 0.05:  # draw every 50ms
         x1, y1 = last_position
         x2, y2 = event.x, event.y
         canvas.create_line(x1, y1, x2, y2, fill="black", width=1)
         drawing_vectors.append(((x1, y1), (x2, y2)))
-        check_intersection(x1, y1, x2, y2)
+        
+        # We normalize before checking intersections
+        normalize_drawing()
+        
+        # Resets canvas2
+        canvas2.delete("all")
+        activation_vectors.clear()
+        activation_states.clear()
+
+        # Resets the activation vectors
+        init_canvas_2(canvas2)
+        
+        check_intersection_all(norm_drawing_vectors)
+        
         last_position = (x2, y2)
         last_time = current_time
-        print(is_trained)
         if is_trained == 1 : # inference
             prediction, predicted_class = test_nn(nn, activation_states)
             # Clear previous prediction results (if any)
@@ -48,7 +91,10 @@ def draw_motion(canvas, event): # draws a vector between two positions following
             highest_prediction_label.pack(anchor="w")
             
             
-    
+def check_intersection_all(vector_list) :
+    for vector in vector_list :
+        (x1, y1), (x2, y2) = vector
+        check_intersection(x1, y1, x2, y2)
 
 def check_intersection(x1, y1, x2, y2): # Checks if the drawn vector intersects an activation vector and updates it if so.
     global activation_states
@@ -152,8 +198,6 @@ def init_canvas_2(canvas2): # Initializes canvas_2 and draws a sawtooth pattern,
     
     # Initializes activation states
     activation_states.extend([0] * len(activation_vectors))
-    print(f"Activation Vectors: {activation_vectors}")  # Check the vectors
-    print(f"Activation States: {activation_states}")  # Check the states
     return canvas2
 
 def training():
@@ -190,6 +234,7 @@ frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
 # Initialize vectors for each canvas
 drawing_vectors = []  # Vectors drawn on canvas1
+norm_drawing_vectors = [] # Vectors drawn on canvas1 but normalized for canva2 intersections calculus
 activation_vectors = []  # Activation vectors on canvas2
 activation_states = []  # Activation states for each vector on canvas2
 

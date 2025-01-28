@@ -32,11 +32,6 @@ def load_samples_and_outputs(samples_dir):
 
 def init_and_train_nn(epochs, lr, activation_function, hidden_size, progress_callback=None) :
     input_set, output_set, file_names = load_samples_and_outputs("samples") # We load the input and output
-    # Print sample results for debugging
-    print("Input samples shape:", input_set.shape)
-    print("Output samples shape:", output_set.shape)
-    print("First input sample:", input_set[0])
-    print("First output sample:", output_set[0])
     
     nn = NeuralNetwork(layer_sizes=[input_set.shape[1], hidden_size, output_set.shape[1]], learning_rate=lr, activation_function=activation_function) # Create the neural network
     print("Starting training...")
@@ -56,10 +51,3 @@ def init_and_train_nn(epochs, lr, activation_function, hidden_size, progress_cal
     
 def test_nn(nn, input_set) :
     return nn.inference(input_set)
-
-
-"""
-Pour la suite :
-    - Ca marche !
-    - Il faut maintenant faire en sorte d'avoir plusieurs sample qui ont le même nom et sont lié à un seul output.
-"""
